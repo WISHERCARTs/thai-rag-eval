@@ -1,0 +1,16 @@
+# Secrets
+.env
+
+# Built index (rebuild with `python -m thairag ingest`)
+index/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+
+# IDE
+.vscode/
+.idea/
