@@ -82,6 +82,7 @@ def correctness_prompt(question: str, reference: str, answer: str) -> str:
     return (
         "เทียบคำตอบของระบบกับคำตอบอ้างอิง ถือว่าถูกเมื่อคำตอบของระบบมีข้อเท็จจริงหลักเดียวกับคำตอบอ้างอิง "
         "(ใช้ถ้อยคำต่างกันได้ มีรายละเอียดเพิ่มได้ถ้าไม่ขัดแย้ง)\n"
+        "ตัวเลข ปี และชื่อเฉพาะต้องตรงกัน ถ้าตัวเลขต่างกันแม้เพียงเล็กน้อย (เช่น 520 กับ 540) ให้ถือว่าผิด\n"
         'ตอบเป็น JSON: {"correct": true หรือ false, "reason": "เหตุผลสั้นๆ"}\n\n'
         f"คำถาม: {question}\nคำตอบอ้างอิง: {reference}\nคำตอบของระบบ: {answer}"
     )
@@ -130,6 +131,15 @@ def evaluate_answers(pipeline: RagPipeline, judge: LLM, questions: Sequence[Ques
             }
         )
     return summarize_answers(rows), rows
+
+
+def evaluate_abstention(pipeline: RagPipeline, questions: Sequence[str]) -> tuple[dict, list[dict]]:
+    """Ask questions the corpus cannot answer; the right response is to abstain."""
+    rows = []
+    for question in questions:
+        answer = pipeline.ask(question)
+        rows.append({"question": question, "answer": answer.text, "abstained": answer.text.strip().startswith(NOT_FOUND)})
+    return {"questions": len(rows), "abstained": mean([float(r["abstained"]) for r in rows])}, rows
 
 
 def summarize_answers(rows: Sequence[dict]) -> dict:

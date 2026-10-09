@@ -1,0 +1,29 @@
+{
+  "bm25": {
+    "chunk_hit@1": 0.8375,
+    "doc_hit@1": 0.9125,
+    "chunk_hit@3": 0.95,
+    "doc_hit@3": 0.975,
+    "chunk_hit@5": 0.9625,
+    "doc_hit@5": 0.9875,
+    "chunk_mrr": 0.8976041666666668
+  },
+  "vector": {
+    "chunk_hit@1": 0.8875,
+    "doc_hit@1": 0.9875,
+    "chunk_hit@3": 1.0,
+    "doc_hit@3": 1.0,
+    "chunk_hit@5": 1.0,
+    "doc_hit@5": 1.0,
+    "chunk_mrr": 0.9416666666666667
+  },
+  "hybrid": {
+    "chunk_hit@1": 0.9,
+    "doc_hit@1": 0.9625,
+    "chunk_hit@3": 0.9875,
+    "doc_hit@3": 1.0,
+    "chunk_hit@5": 0.9875,
+    "doc_hit@5": 1.0,
+    "chunk_mrr": 0.9416666666666667
+  }
+}

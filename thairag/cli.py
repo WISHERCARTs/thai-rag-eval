@@ -101,6 +101,25 @@ def cmd_eval_answers(args) -> None:
             f.write(json.dumps(row, ensure_ascii=False) + "\n")
 
 
+def cmd_eval_abstention(args) -> None:
+    from thairag.evaluate import evaluate_abstention
+    from thairag.rag import RagPipeline
+
+    chunks, retrievers, cached, llm = _load(args)
+    questions = [q.strip() for q in args.file.read_text(encoding="utf-8").splitlines() if q.strip() and not q.startswith("#")]
+    cached.prefill(questions)
+    pipeline = RagPipeline(retrievers[args.retriever], chunks, llm, k=args.k)
+    summary, rows = evaluate_abstention(pipeline, questions)
+    print(json.dumps(summary, indent=2))
+    for row in rows:
+        if not row["abstained"]:
+            print(f"ANSWERED: {row['question']} -> {row['answer'][:200]}")
+    args.out.mkdir(parents=True, exist_ok=True)
+    (args.out / f"abstention_{args.retriever}.json").write_text(
+        json.dumps({"summary": summary, "rows": rows}, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+
+
 def main(argv=None) -> None:
     for stream in (sys.stdout, sys.stderr):
         if hasattr(stream, "reconfigure"):
@@ -140,6 +159,13 @@ def main(argv=None) -> None:
     p.add_argument("--limit", type=int, default=40)
     p.add_argument("--out", type=Path, default=Path("eval/results"))
     p.set_defaults(func=cmd_eval_answers)
+
+    p = sub.add_parser("eval-abstention", help="check the system refuses questions the corpus cannot answer")
+    p.add_argument("--file", type=Path, default=Path("eval/unanswerable.txt"))
+    p.add_argument("--retriever", choices=["bm25", "vector", "hybrid"], default="hybrid")
+    p.add_argument("-k", type=int, default=5)
+    p.add_argument("--out", type=Path, default=Path("eval/results"))
+    p.set_defaults(func=cmd_eval_abstention)
 
     args = parser.parse_args(argv)
     args.func(args)

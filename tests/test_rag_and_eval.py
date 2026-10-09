@@ -121,6 +121,25 @@ def test_evaluate_answers_scores_faithfulness_correctness_and_abstention(chunks)
     assert summary["unjudged"] == 0
 
 
+def test_correctness_prompt_tells_the_judge_numbers_must_match():
+    from thairag.evaluate import correctness_prompt
+
+    assert "ตัวเลขต่างกัน" in correctness_prompt("q", "520", "540")
+
+
+def test_evaluate_abstention_counts_refusals(chunks):
+    from thairag.evaluate import evaluate_abstention
+
+    answers = {"หอไอเฟลสูงกี่เมตร": NOT_FOUND, "ดอกไม้ประจำจังหวัดยะลา": "ดอกพิกุล [1]"}
+    llm = FakeLLM(lambda prompt: answers[prompt.split("คำถาม: ")[-1]])
+    pipeline = RagPipeline(StaticRetriever(["nan#0"]), chunks, llm, k=1)
+
+    summary, rows = evaluate_abstention(pipeline, list(answers))
+
+    assert summary == {"questions": 2, "abstained": 0.5}
+    assert [r["abstained"] for r in rows] == [True, False]
+
+
 def test_summary_counts_unusable_judge_replies():
     rows = [
         {"abstained": False, "faithful": None, "correct": None, "cited": True, "gold_in_context": True},
